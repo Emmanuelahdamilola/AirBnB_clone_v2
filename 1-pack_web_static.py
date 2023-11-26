@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/python3
 # This is a Bash script for packaging a web application using Fabric.
 # It creates a compressed archive of the 'web_static' directory and stores it in the 'versions' directory.
 
