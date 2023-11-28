@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Bash script for packaging a web application using Fabric. 
+# Bash script for packaging a web application using Fabric.
 # Creates a compressed archive of 'web_static' and stores it in 'versions'.
 
 # Import necessary modules
@@ -14,20 +14,20 @@ def do_pack():
     Returns:
         str: Path to the created compressed archive, or None if the operation fails.
     """
-    # Check if 'versions' directory exists; create it if not
-    if os.path.isdir("versions") is False:
-        # Attempt to create the 'versions' directory; return None if failed
-        if local("mkdir versions").failed is True:
+    dt = datetime.now()
+
+    file_name = "versions/web_static_{}{}{}{}{}{}.tgz".format(
+        dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second
+    )
+
+    if not os.path.isdir("versions"):
+        if local("mkdir -p versions").failed:
             return None
 
-    # Generate a unique file name for the compressed archive using the current date and time
-    dt = datetime.now()
-    file = f"versions/web-static_{dt.year}{dt.month}{dt.day}{dt.hour}{dt.minute}{dt.second}.tgz"
-
     # Attempt to create a compressed archive; return None if failed
-    if local(f'tar -czvf {file} web_static').failed is True:
+    if local("tar -cvzf {} web_static".format(file_name)).failed:
         return None
 
     # Return the path to the created compressed archive
-    return file
+    return file_name
 
