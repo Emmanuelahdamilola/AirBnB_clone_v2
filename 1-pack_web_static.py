@@ -7,12 +7,13 @@ import os
 from datetime import datetime
 from fabric.api import local
 
+
 def do_pack():
     """
     Create a compressed archive of the 'web_static' directory.
 
     Returns:
-        str: Path to the created compressed archive, or None if the operation fails.
+        str: Created compressed archive, or None if the operation fails.
     """
     dt = datetime.now()
 
@@ -30,4 +31,3 @@ def do_pack():
 
     # Return the path to the created compressed archive
     return file_name
-
