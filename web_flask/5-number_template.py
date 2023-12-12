@@ -41,9 +41,11 @@ def display_number(n):
 
 
 @app.route('/number_template/<int:n>')
-def display_number_template(n):
-    """Displays a HTML page with 'Number: n' inside the H1 tag"""
-    return render_template('5-number.html', number=n)
+def number_template(n):
+    """Retrieve template for request
+    """
+    path = '5-number.html'
+    return render_template(path, n=n)
 
 
 if __name__ == '__main__':
