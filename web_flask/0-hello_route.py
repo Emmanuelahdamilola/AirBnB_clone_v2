@@ -1,13 +1,17 @@
-from flask import Flask, render_template
+#!/usr/bin/python3
+"""Start a flask web app
+"""
 
+from flask import Flask
 app = Flask(__name__)
 
-# Set strict_slashes to False
-app.url_map.strict_slashes = False
 
 @app.route('/')
-def home():
+def hello_flask():
+    """Return string when route queried
+    """
     return 'Hello HBNB!'
 
 if __name__ == '__main__':
+    app.url_map.strict_slashes = False
     app.run(host='0.0.0.0', port=5000)
