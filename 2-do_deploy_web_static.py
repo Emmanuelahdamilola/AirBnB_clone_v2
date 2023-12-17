@@ -1,54 +1,67 @@
 #!/usr/bin/python3
-"""Compress web static package
-"""
-from fabric.api import *
+"""Fabric script that distributes an archive to your web servers"""
+from fabric.api import env, put, run, local
+from os.path import exists
 from datetime import datetime
-from os import path
-
 
 env.hosts = ['18.210.33.153', '54.236.27.119']
 env.user = 'ubuntu'
 env.key_filename = '~/.ssh/school'
 
 
-def do_deploy(archive_path):
-    """Deploy web files to server"""
+def do_pack():
+    """Generates a .tgz archive from the contents of the web_static folder"""
     try:
-        # Check if the archive_path exists
-        if not path.exists(archive_path):
-            return False
+        date_format = "%Y%m%d%H%M%S"
+        date_str = datetime.utcnow().strftime(date_format)
+        file_name = "versions/web_static_{}.tgz".format(date_str)
 
-        # Upload the archive to the /tmp/ directory on the server
-        put(archive_path, '/tmp/')
+        local("mkdir -p versions")
+        local("tar -cvzf {} web_static".format(file_name))
 
-        # Create the target directory with a timestamp
-        file_name = archive_path.split('/')[-1]
-        time_stamp = file_name.split('.')[0]
-        target_dir = f'/data/web_static/releases/web_static_{time_stamp}/'
-        run(f'sudo mkdir -p {target_dir}')
+        return file_name
+    except Exception:
+        return None
 
-        # Uncompress the archive and delete the .tgz file
-        run(f'sudo tar -xzf /tmp/{file_name} -C {target_dir}')
 
-        # Remove the uploaded archive
-        run(f'sudo rm /tmp/{file_name}')
-
-        # Move contents into the host web_static directory
-        run(f'sudo mv {target_dir}/web_static/* {target_dir}/')
-
-        # Remove the extraneous web_static directory
-        run(f'sudo rm -rf {target_dir}/web_static')
-
-        # Delete pre-existing symbolic link
-        run('sudo rm -rf /data/web_static/current')
-
-        # Re-establish symbolic link to the new deployment
-        run(f'sudo ln -s {target_dir} /data/web_static/current')
-    except Exception as e:
-        # Print the exception for debugging purposes
-        print(e)
-        # Return False on failure
+def do_deploy(archive_path):
+    """Distributes an archive to your web servers"""
+    if not exists(archive_path):
         return False
 
-    # Return True on success
-    return True
+    try:
+        # Upload the archive to the /tmp/ directory of the web server
+        put(archive_path, '/tmp/')
+
+        # Extract archive to /data/web_static/releases/
+        file_name = archive_path.split('/')[-1]
+        folder_name = file_name.split('.')[0]
+        release_path = '/data/web_static/releases/{}'.format(folder_name)
+        run('mkdir -p {}'.format(release_path))
+        run('tar -xzf /tmp/{} -C {}'.format(file_name, release_path))
+
+        # Delete the archive from the web server
+        run('rm /tmp/{}'.format(file_name))
+
+        # Move contents to the proper location
+        run('mv {}/web_static/* {}/'.format(release_path, release_path))
+
+        # Delete the symbolic link /data/web_static/current
+        run('rm -rf /data/web_static/current')
+
+        # Create a new symbolic link
+        run('ln -s {} /data/web_static/current'.format(release_path))
+
+        print('New version deployed!')
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
+if __name__ == '__main__':
+    archive_path = do_pack()
+    if archive_path:
+        do_deploy(archive_path)
+    else:
+        print('Packaging failed.')
