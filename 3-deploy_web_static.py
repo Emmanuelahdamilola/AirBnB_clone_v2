@@ -28,7 +28,7 @@ def do_pack():
         if result.succeeded:
             return archive_path
         return None
-    except:
+    except Exception as e:
         return None
 
 
@@ -46,36 +46,35 @@ def do_deploy(archive_path):
         # Create the target directory with a timestamp
         file_name = archive_path.split('/')[-1]
         time_stamp = file_name.split('.')[0]
-        target_directory = '/data/web_static/releases/web_static_{}/'.format(time_stamp)
-        run('sudo mkdir -p {}'.format(target_directory))
+        target_dir = f'/data/web_static/releases/web_static_{time_stamp}/'
+        run('sudo mkdir -p {}'.format(target_dir))
 
         # Uncompress the archive and delete the .tgz file
-        run('sudo tar -xzf /tmp/{} -C {}'.format(file_name, target_directory))
+        run('sudo tar -xzf /tmp/{} -C {}'.format(file_name, target_dir))
 
         # Remove the uploaded archive
         run('sudo rm /tmp/{}'.format(file_name))
 
         # Move contents into the host web_static directory
-        run('sudo mv {}/web_static/* {}/'.format(target_directory, target_directory))
+        run('sudo mv {}/web_static/* {}/'.format(target_dir, target_dir))
 
         # Remove the extraneous web_static directory
-        run('sudo rm -rf {}/web_static'.format(target_directory))
+        run('sudo rm -rf {}/web_static'.format(target_dir))
 
         # Delete pre-existing symbolic link
         run('sudo rm -rf /data/web_static/current')
 
         # Re-establish symbolic link to the new deployment
-        run('sudo ln -s {} /data/web_static/current'.format(target_directory))
-    except:
+        run('sudo ln -s {} /data/web_static/current'.format(target_dir))
+    except Exception as e:
+        # Print the exception for debugging purposes
+        print(e)
         # Return False on failure
         return False
 
-    # Return True on success
-    return True
 
 def deploy():
     """Deploy web static
     """
     # Perform deployment by calling do_pack and do_deploy
     return do_deploy(do_pack())
-
