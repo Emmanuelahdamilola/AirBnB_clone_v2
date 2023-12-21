@@ -37,26 +37,30 @@ class DBStorage:
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """
-        Queries the database and returns objects as a dictionary.
+    """
+    Queries the database and returns objects as a dictionary.
 
-        Args:
-            cls (str): Optional class name to filter objects.
+    Args:
+        cls (str): Optional class name to filter objects.
 
-        Returns:
-            Dictionary of objects with keys in the format 'ClassName.ID'.
-        """
-        if cls:
-            results = self.__session.query(eval(cls)).all()
-        else:
-            # Combine results from multiple classes into one list
-            results = (self.__session.query(State).all() +
-                       self.__session.query(City).all() +
-                       self.__session.query(User).all() +
-                       self.__session.query(Place).all() +
-                       self.__session.query(Review).all())
+    Returns:
+        Dictionary of objects with keys in the format 'ClassName.ID'.
+    """
+    if cls:
+        # Use class reference directly without eval
+        results = self.__session.query(cls).all()
+    else:
+        # Combine results from multiple classes into one list
+        results = (
+            self.__session.query(State).all()
+            + self.__session.query(City).all()
+            + self.__session.query(User).all()
+            + self.__session.query(Place).all()
+            + self.__session.query(Review).all()
+        )
 
-        return {f"{type(obj).__name__}.{obj.id}": obj for obj in results}
+    return {f"{type(obj).__name__}.{obj.id}": obj for obj in results}
+
 
     def new(self, obj):
         """
